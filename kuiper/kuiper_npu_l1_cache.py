@@ -24,27 +24,23 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects import Cache
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
-class NpuL1Cache(ClockedObject):
-    type = 'NpuL1Cache'
-    cxx_header = "kuiper/npu/npu_3dram/kuiper_npu_l1_cache.hh"
-    cxx_class = "gem5::NpuL1Cache"
+class CgraL1Cache(Cache):
+    type = 'CgraL1Cache'
+    cxx_header = "kuiper/npu/npu_cache/npu_l1_cache.hh"
+    cxx_class = "gem5::CgraL1Cache"
 
-    mem_side = RequestPort("Memory side port, sends requests")
-    
-    # dram_port = VectorRequestPort(" Bank port, read and write data ")
-
-    l0_read_write_port = ResponsePort("Response to data from L0 cache") 
-
-    cache_line = Param.Int(2048, "The L1 cache line length")
-    
-    latency = Param.Cycles(1, "Cycles taken on a hit or to resolve a miss")
-
-    size = Param.MemorySize("65536kB", "The size of the cache")
-
-    system = Param.System(Parent.any, "The system this cache is part of")
-
+    # Default parameters
+    size = "256kB"
+    assoc = 8
+    tag_latency = 20
+    data_latency = 20
+    response_latency = 20
+    mshrs = 20
+    tgts_per_mshr = 12

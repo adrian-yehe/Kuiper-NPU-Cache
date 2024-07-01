@@ -27,7 +27,7 @@
 
 Import('*')
 
-SimObject('../../kuiper_npu_l0_cache.py', sim_objects=['NpuCache'])
-Source('npu_cache.cc')
+SimObject('../../kuiper_npu_l1_cache.py', sim_objects=['CgraL1Cache'])
+Source('npu_l1_cache.cc')
 
-DebugFlag('NpuCache', "Debug kuiper npu cache and 3DRAM module")
+DebugFlag('CgraL1Cache', "Debug kuiper npu cache and 3DRAM module")

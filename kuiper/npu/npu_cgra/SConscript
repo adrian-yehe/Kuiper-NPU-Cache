@@ -27,7 +27,7 @@
 
 Import('*')
 
-SimObject('../../kuiper_npu_cgra.py', sim_objects=['KuiperCgra'])
-Source('kuiper_cgra.cc')
+SimObject('../../npu_cgra.py', sim_objects=['KuiperCgra'])
+Source('npu_cgra.cc')
 
 DebugFlag('KuiperCgra', "Debug kuiper npu cgra core module")

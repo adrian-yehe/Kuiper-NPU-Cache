@@ -25,9 +25,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+# Import('*')
 
-SimObject('../../kuiper_npu_l1_cache.py', sim_objects=['NpuL1Cache'])
-Source('kuiper_npu_l1_cache.cc')
+# SimObject('../../npu_3dram.py', sim_objects=['DramObj'])
+# Source('npu_3dram.cc')
 
-DebugFlag('NpuL1Cache', "Debug kuiper npu 3DRAM module")
+# DebugFlag('DramObj', "Debug kuiper npu cache and 3DRAM module")

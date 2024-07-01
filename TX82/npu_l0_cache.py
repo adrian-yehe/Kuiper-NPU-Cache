@@ -33,6 +33,8 @@ line options from each individual class.
 
 import m5
 from m5.objects import Cache
+from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
 
 # # Add the common scripts to our path
 # m5.util.addToPath("../../../")
@@ -52,19 +54,21 @@ class L0CacheBase(Cache):
         """Connect this cache to a memory-side bus"""
         self.mem_side = bus.cpu_side_ports
 
-    def connectCPU(self, cpu):
+    def connectCgra(self, cpu):
         """Connect this cache's port to a CPU-side port
         This must be defined in a subclass"""
         raise NotImplementedError
 
 class CgraL0Cache(L0CacheBase):
-    """Simple L1 data cache with default values"""
-
     # Set the default size
     size = "256kB"
 
-    def connectCPU(self, cpu):
-        """Connect this cache's port to a CGRA dcache port"""
+    # Vector port. Load0/1 and store data ports connect to this
+    # port which is automatically split out into two ports.
+    cpu_side = VectorResponsePort("CPU side port, receives requests")
+    
+    def connectCgra(self, cpu):
+        """Connect this cache's port to a CGRA cache port"""
         self.cpu_side = cpu.load0_port
         self.cpu_side = cpu.load1_port
         self.cpu_side = cpu.store_port

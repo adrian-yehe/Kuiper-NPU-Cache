@@ -1,4 +1,5 @@
-# Copyright (c) 2015 Jason Power
+# -*- coding: utf-8 -*-
+# Copyright (c) 2016 adrian-yan Tsing micro
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,47 +25,65 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Caches with options for a simple gem5 configuration script
-
-This file contains L1 I/D and L2 caches to be used in the simple
-gem5 configuration script. It uses the SimpleOpts wrapper to set up command
-line options from each individual class.
-"""
-
-import m5
+from m5.objects.ClockedObject import ClockedObject
 from m5.objects import Cache
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.proxy import *
+
+# class CgraL1Cache(Cache):
+#     type = 'CgraL1Cache'
+#     cxx_header = "kuiper/npu/npu_cache/npu_l1_cache.hh"
+#     cxx_class = "gem5::CgraL1Cache"
+
+#     # Default parameters
+#     size = "256kB"
+#     assoc = 8
+#     tag_latency = 20
+#     data_latency = 20
+#     response_latency = 20
+#     mshrs = 20
+#     tgts_per_mshr = 12
+    
+#     # Vector port. Load0/1 and store data ports connect to this
+#     # port which is automatically split out into two ports.
+#     # cpu_side = VectorResponsePort("CPU side port, receives requests")
+#     # mem_side = RequestPort("Memory side port, sends requests")
+    
+#     # dram_port = VectorRequestPort(" 3DRAM Bank port, read and write data ")
+   
+#     # def connectCacheBus(self, bus):
+#     #     self.cpu_side = bus.mem_side_ports
+
+#     # def connectMemSideBus(self, bus):
+#     #     self.mem_side = bus.cpu_side_ports
+
+#     # def connect3DRam(self, dram): 
 
 # # Add the common scripts to our path
 # m5.util.addToPath("../../../")
 
 # Some specific options for caches
 # For all options see src/mem/cache/BaseCache.py
-class L0CacheBase(Cache):
-    """Simple L1 Cache with default values"""
-    assoc = 2
-    tag_latency = 2
-    data_latency = 2
-    response_latency = 2
-    mshrs = 4
-    tgts_per_mshr = 20
 
-    def connectBus(self, bus):
-        """Connect this cache to a memory-side bus"""
-        self.mem_side = bus.cpu_side_ports
+import m5
+from m5.objects import Cache
+from m5.params import *
 
-    def connectCPU(self, cpu):
-        """Connect this cache's port to a CPU-side port
-        This must be defined in a subclass"""
-        raise NotImplementedError
-
-class CgraL0Cache(L0CacheBase):
+class CgraL1Cache(Cache):
     """Simple L1 data cache with default values"""
 
-    # Set the default size
+    # Default parameters
     size = "256kB"
+    assoc = 8
+    tag_latency = 20
+    data_latency = 20
+    response_latency = 20
+    mshrs = 20
+    tgts_per_mshr = 12
 
-    def connectCPU(self, cpu):
-        """Connect this cache's port to a CGRA dcache port"""
-        self.cpu_side = cpu.load0_port
-        self.cpu_side = cpu.load1_port
-        self.cpu_side = cpu.store_port
+    def connectCPUSideBus(self, bus):
+        self.cpu_side = bus.mem_side_ports
+
+    def connectMemSideBus(self, bus):
+        self.mem_side = bus.cpu_side_ports
