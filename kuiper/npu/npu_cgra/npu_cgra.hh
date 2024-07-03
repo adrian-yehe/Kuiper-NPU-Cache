@@ -44,16 +44,18 @@ namespace gem5
     KuiperCgra(const KuiperCgraParams &param);
 
   public:
-    bool Load0(Addr &addr, Addr *buf, std::uint32_t len = 128);
-    bool Load1(Addr &addr, Addr *buf, std::uint32_t len = 128);
-    bool Store(Addr &addr, Addr *buf, std::uint32_t len = 128);
+    bool Load0(Addr &addr, std::uint8_t *buf, std::uint32_t len = 128);
+    bool Load1(Addr &addr, std::uint8_t *buf, std::uint32_t len = 128);
+    bool Store(Addr &addr, std::uint8_t *buf, std::uint32_t len = 128);
 
   private:
     void Step();
     void SendPacket();
+    void Read0();
+    void Write();
 
     bool HandleResponse(PacketPtr pkt);
-    PacketPtr Package(Addr &addr, Addr *buf, Request::Flags flag, gem5::MemCmd cmd);
+    PacketPtr Package(Addr &addr, std::uint8_t *buf, Request::Flags flag, gem5::MemCmd cmd);
 
     /**
      * Event function to execute on an event trigger
@@ -144,6 +146,9 @@ namespace gem5
   public:
     /// For request block queue
     std::array<std::queue<PacketPtr>, 3> mBlockPktArray;
+
+    std::uint8_t mWrite = 0;
+    std::uint8_t mRead = 0;
 
     /// Cache statistics
   protected:

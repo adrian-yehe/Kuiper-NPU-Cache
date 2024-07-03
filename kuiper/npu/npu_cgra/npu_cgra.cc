@@ -52,11 +52,11 @@ namespace gem5
     {
         // Create a new request-packet pair
         RequestPtr req = std::make_shared<Request>(
-            addr, mReqDataLen,  flag, mReqID++);
+            addr, mReqDataLen,  flag, 0/* mReqID++ */);
 
         PacketPtr pkt = new Packet(req, cmd, this->mReqDataLen);
 
-        pkt->dataDynamic<std::uint8_t>(buf);
+        pkt->dataDynamic(buf);
         return pkt;
     }
 
@@ -80,7 +80,7 @@ namespace gem5
 
     }
 
-    bool KuiperCgra::Load0(Addr &addr, Addr *buf, std::uint32_t len)
+    bool KuiperCgra::Load0(Addr &addr, std::uint8_t *buf, std::uint32_t len)
     {
         assert(!buf || !addr);
         auto ptr = Package(addr, buf,0 /* Request::Flags::LDCQ */, MemCmd::ReadReq);
@@ -92,10 +92,11 @@ namespace gem5
             this->mBlockPktArray[0].push(ptr);
             return ret;
         }
+
         return ret;
     }
 
-    bool KuiperCgra::Load1(Addr &addr, Addr *buf, std::uint32_t len)
+    bool KuiperCgra::Load1(Addr &addr,  std::uint8_t *buf, std::uint32_t len)
     {
         assert(!buf || !addr);
         auto ptr = Package(addr, buf, 0/* Request::Flags::LDCQ */, MemCmd::ReadReq);
@@ -110,10 +111,10 @@ namespace gem5
         return ret;
     }
 
-    bool KuiperCgra::Store(Addr &addr, Addr *buf, std::uint32_t len)
+    bool KuiperCgra::Store(Addr &addr, std::uint8_t *buf, std::uint32_t len)
     {
         assert(!buf || !addr);
-        auto ptr = Package(addr, buf, 0 /* Request::Flags::STCQ */, MemCmd::ReadReq);
+        auto ptr = Package(addr, buf, 0 /* Request::Flags::STCQ */, MemCmd::WriteReq);
         auto ret = this->store_port.sendTimingReq(ptr);
 
         if(false == ret)
@@ -127,17 +128,25 @@ namespace gem5
 
     void KuiperCgra::ProcessEvent()
     {
-        schedule(mEvent, curTick() +  mLatency);
+        // if(0 == this->mWrite)
+        //    Write();
+        // else if( 2 <= this->mWrite && 0 == mRead )
+        //     Read0();
 
-        Step();
-        DPRINTF(KuiperCgra, "CGRA core execute operator calculate\r\n");
+        if( 0 == this->mRead )
+            Read0();
+
+        DPRINTF(KuiperCgra, "CGRA core step\r\n");
+
+        schedule(mEvent, curTick() +  mLatency);
     }
 
     bool KuiperCgra::HandleResponse(PacketPtr pkt)
     {
-        assert(pkt->isResponse());
-        DPRINTF(KuiperCgra, "Recive response form L0;Addr\r\n");
+        this->mWrite++;
+        DPRINTF(KuiperCgra, "Recive response form L0;Addr: %#x\r\n", reinterpret_cast<std::uint64_t>(pkt->getConstPtr<uint8_t>()));
 
+        DDUMP(KuiperCgra, pkt->getConstPtr<uint8_t>(), this->mReqDataLen + 1024);
         return true;
     }
 
@@ -175,14 +184,49 @@ namespace gem5
 
     void KuiperCgra::Step(void)
     {
-        std::uint8_t buf[128] = {0};
+        auto *buf = new std::uint8_t[1024] {0xAA};
+        memset(buf, 0xAA, 1024);
         Addr addr = 1024;
+        DDUMP(KuiperCgra, buf, this->mReqDataLen);
 
-        auto pkt = Package(addr, buf, 0, 0);
+        auto store_pkt = Package(addr, buf, 0, MemCmd::WriteReq);
 
-        pkt->makeResponse();
+        store_port.sendTimingReq(store_pkt);
+
+        DPRINTF(KuiperCgra, "load0 port send requeset to l0\r\n");
+    };
+
+    void KuiperCgra::Read0(void)
+    {
+        auto *buf = new std::uint8_t[1024]{0xAA};
+        Addr addr = 0x400000;
+        memset(buf, 0xAA, 1024);
+
+        DPRINTF(KuiperCgra, "Read0 addr %#x\n", reinterpret_cast<std::uint64_t>(buf));
+        DDUMP(KuiperCgra, buf, this->mReqDataLen + 1024);
+
+        auto pkt = Package(addr, buf, 0, MemCmd::ReadReq);
 
         load0_port.sendTimingReq(pkt);
+        this->mRead++;
+
+        DPRINTF(KuiperCgra, "load0 port send requeset to l0\r\n");
+    };
+
+    void KuiperCgra::Write(void)
+    {
+        auto *buf = new std::uint8_t[1024]{0xBB};
+        Addr addr = 1024;
+        memset(buf, 0xBB, 1024);
+        DPRINTF(KuiperCgra, "Write addr %#x\n", reinterpret_cast<std::uint64_t>(buf));
+        DDUMP(KuiperCgra, buf, this->mReqDataLen);
+
+        auto pkt = Package(addr, buf, 0, MemCmd::WriteReq);
+
+        store_port.sendTimingReq(pkt);
+
+        this->mWrite++;
+        DPRINTF(KuiperCgra, "Store port send requeset to l0\r\n");
     };
 
     KuiperCgra::KuiperCgraCacheStats::KuiperCgraCacheStats(statistics::Group *parent)

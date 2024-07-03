@@ -38,17 +38,17 @@ namespace gem5
     CgraL1Cache::CgraL1Cache(const CgraL1CacheParams &params) : Cache(params),
                                                                 stats(this)
     {
+
     }
 
-    void CgraL1Cache::recvTimingReq(PacketPtr pkt)
-    {
-        DPRINTF(CgraL1Cache, "Recive timing request from L0 cache\r\n");
+    // void CgraL1Cache::recvTimingReq(PacketPtr pkt)
+    // {
+    //     DPRINTF(CgraL1Cache, "Recive timing request from L0 cache\r\n");
         
-        // assert(pkt->needsResponse());
+    //     // assert(pkt->needsResponse());
 
-        pkt->makeResponse();
-        Cache::cpuSidePort.sendTimingResp(pkt); 
-    }
+    //     Cache::memSidePort.sendTimingReq(pkt); 
+    // }
 
     void CgraL1Cache::Process3dRamRequest(PacketPtr pkt)
     {

@@ -52,7 +52,7 @@ namespace gem5
 
 
   protected:
-    void recvTimingReq(PacketPtr pkt) override;
+    // void recvTimingReq(PacketPtr pkt) override;
 
   private:
     void Process3dRamRequest(PacketPtr pkt);
