@@ -36,11 +36,12 @@ class CgraL1Cache(Cache):
     cxx_header = "kuiper/npu/npu_cache/npu_l1_cache.hh"
     cxx_class = "gem5::CgraL1Cache"
 
-    # Default parameters
-    size = "256kB"
-    assoc = 8
+    # Default parameters L1 capacity is 64MByte;cache line:4KByte
+    size = "65536kB"
+    # 16 way assoc
+    assoc = 16
     tag_latency = 20
-    data_latency = 20
+    data_latency = 24
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12

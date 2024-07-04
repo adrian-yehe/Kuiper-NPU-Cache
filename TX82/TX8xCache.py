@@ -71,6 +71,8 @@ system.l1_cache_bus = L2XBar()
 # Hook the cgra ports up to the l1_cache_bus
 system.l0_cache.connectBus(system.l1_cache_bus)
 
+# Setup L0 cache line size to:4KByte
+system.cache_line_size =  4096
 #Create an L2 cache and connect it to the l1_cache_bus
 system.l1_cache = CgraL1Cache()
 

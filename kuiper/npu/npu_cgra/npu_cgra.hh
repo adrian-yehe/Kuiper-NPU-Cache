@@ -29,6 +29,7 @@
 #define __KUIPER__CGRA__H__
 
 #include <queue>
+#include <map>
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "mem/packet.hh"
@@ -54,7 +55,7 @@ namespace gem5
     void Read0();
     void Write();
 
-    bool HandleResponse(PacketPtr pkt);
+    bool HandleResponse(PacketPtr pkt, std::int32_t &id);
     PacketPtr Package(Addr &addr, std::uint8_t *buf, Request::Flags flag, gem5::MemCmd cmd);
 
     /**
@@ -75,17 +76,15 @@ namespace gem5
 
       /// If we tried to send a packet and it was blocked, store it here
       // PacketPtr blockedPacket;
-
-      /// Since this is a vector port, need to know what number this one is
-      int id;
+    int id;
 
     public:
       /**
        * Constructor. Just calls the superclass constructor.
        */
       CachePort(const std::string &name, int id, KuiperCgra *owner) : RequestPort(name),
-                                                              owner(owner),
-                                                              id(id)
+                                                                      owner(owner),
+                                                                      id(id)
       {
       }
 
@@ -97,6 +96,12 @@ namespace gem5
       //  * @param packet to send.
       //  */
       // void sendPacket(PacketPtr pkt);
+    public:
+      std::map<std::uint64_t, int> mRequestMap;
+      /// Since this is a vector port, need to know what number this one is
+      int mReqID = 0;
+      /// For request block queue
+      std::queue<PacketPtr> mBlockQueue;
 
     protected:
       /**
@@ -143,9 +148,6 @@ namespace gem5
     EventFunctionWrapper mEvent;
 
 
-  public:
-    /// For request block queue
-    std::array<std::queue<PacketPtr>, 3> mBlockPktArray;
 
     std::uint8_t mWrite = 0;
     std::uint8_t mRead = 0;
@@ -176,6 +178,8 @@ namespace gem5
      */
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
+    
+
   };
 }
 

@@ -25,9 +25,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Import('*')
+# from m5.objects.ClockedObject import ClockedObject
+# from m5.objects import Cache
+# from m5.SimObject import SimObject
+# from m5.params import *
+# from m5.proxy import *
 
-# SimObject('../../npu_3dram.py', sim_objects=['CgraDram'])
-# Source('npu_3dram.cc')
+# class CgraDram(ClockedObject):
+#     type = 'CgraDram'
+#     cxx_header = "kuiper/npu/npu_3dram/npu_3dram.hh"
+#     cxx_class = "gem5::CgraDram"
 
-# DebugFlag('CgraDram', "Debug kuiper npu  3DRAM module")
+#     min_cycle = Param.Int64(23, "3DRAM  min cycle ")
+#     burst_threshold = Param.Int(23, "3DRAM  burst threshold")
+#     align = Param.Int(256, "Read or write 3DRAM align") 
+    
+#     system = Param.System(Parent.any,"The system this cache is part of")
+
+    

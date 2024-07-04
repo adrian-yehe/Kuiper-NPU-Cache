@@ -32,6 +32,7 @@
 #include "sim/sim_object.hh"
 #include "params/KuiperCgra.hh"
 #include "npu_cgra.hh"
+#include "operator/test_bench.hh"
 
 namespace gem5
 {
@@ -62,17 +63,21 @@ namespace gem5
 
     bool KuiperCgra::CachePort::recvTimingResp(PacketPtr pkt)
     {
-        return owner->HandleResponse(pkt);
+        owner->HandleResponse(pkt, this->mReqID);
+
+        this->mRequestMap.erase(reinterpret_cast<std::uint64_t>(pkt));
+
+        return true;
     }
 
     void KuiperCgra::CachePort::recvReqRetry()
     {
-        if(0 == owner->mBlockPktArray[id].size())
+        if(0 == this->mBlockQueue.size())
             assert(0);
 
-        auto pkt = owner->mBlockPktArray[id].back(); 
+        auto pkt = this->mBlockQueue.back(); 
         sendTimingReq(pkt);
-        owner->mBlockPktArray[id].pop();
+        this->mBlockQueue.pop();
     }
 
     void KuiperCgra::CachePort::recvRangeChange()
@@ -89,9 +94,11 @@ namespace gem5
         if(false == ret)
         {
             DPRINTF(KuiperCgra, "Load0 port send request to L0 fail!!!!!!");
-            this->mBlockPktArray[0].push(ptr);
+            this->load0_port.mBlockQueue.push(ptr);
             return ret;
         }
+
+        this->load0_port.mRequestMap.insert({reinterpret_cast<std::uint64_t>(ptr), load0_port.mReqID});
 
         return ret;
     }
@@ -105,9 +112,11 @@ namespace gem5
         if(false == ret)
         {
             DPRINTF(KuiperCgra, "Load1 port send request to L0 fail!!!!!!");
-            this->mBlockPktArray[1].push(ptr);
+            this->load1_port.mBlockQueue.push(ptr);
             return ret;
         }
+
+        this->load1_port.mRequestMap.insert({reinterpret_cast<std::uint64_t>(ptr), load1_port.mReqID});
         return ret;
     }
 
@@ -116,37 +125,35 @@ namespace gem5
         assert(!buf || !addr);
         auto ptr = Package(addr, buf, 0 /* Request::Flags::STCQ */, MemCmd::WriteReq);
         auto ret = this->store_port.sendTimingReq(ptr);
-
         if(false == ret)
         {
             DPRINTF(KuiperCgra, " Store port send request to L0 fail!!!!!!");
-            this->mBlockPktArray[2].push(ptr);
+            this->store_port.mBlockQueue.push(ptr);
             return ret;
         }
+
+        this->load1_port.mRequestMap.insert({reinterpret_cast<std::uint64_t>(ptr), store_port.mReqID});
         return ret;
     }
 
     void KuiperCgra::ProcessEvent()
     {
-        // if(0 == this->mWrite)
-        //    Write();
-        // else if( 2 <= this->mWrite && 0 == mRead )
-        //     Read0();
-
-        if( 0 == this->mRead )
-            Read0();
-
-        DPRINTF(KuiperCgra, "CGRA core step\r\n");
+        
 
         schedule(mEvent, curTick() +  mLatency);
     }
 
-    bool KuiperCgra::HandleResponse(PacketPtr pkt)
+    bool KuiperCgra::HandleResponse(PacketPtr pkt, std::int32_t &id)
     {
-        this->mWrite++;
-        DPRINTF(KuiperCgra, "Recive response form L0;Addr: %#x\r\n", reinterpret_cast<std::uint64_t>(pkt->getConstPtr<uint8_t>()));
+        DPRINTF(KuiperCgra, "Recive response form L0;Addr: %#x\r\n", 
+                                reinterpret_cast<std::uint64_t>(pkt->getConstPtr<uint8_t>()));
 
-        DDUMP(KuiperCgra, pkt->getConstPtr<uint8_t>(), this->mReqDataLen + 1024);
+        std::uint8_t *p = pkt->getPtr<uint8_t>();
+        *(reinterpret_cast<std::uint32_t *>(p + this->mReqDataLen)) = id;
+        DDUMP(KuiperCgra, p, this->mReqDataLen + 1024);
+
+        delete[] pkt;
+
         return true;
     }
 
@@ -184,16 +191,9 @@ namespace gem5
 
     void KuiperCgra::Step(void)
     {
-        auto *buf = new std::uint8_t[1024] {0xAA};
-        memset(buf, 0xAA, 1024);
-        Addr addr = 1024;
-        DDUMP(KuiperCgra, buf, this->mReqDataLen);
+        Cgra<KuiperCgra> core(this);
 
-        auto store_pkt = Package(addr, buf, 0, MemCmd::WriteReq);
-
-        store_port.sendTimingReq(store_pkt);
-
-        DPRINTF(KuiperCgra, "load0 port send requeset to l0\r\n");
+        core.Add();
     };
 
     void KuiperCgra::Read0(void)

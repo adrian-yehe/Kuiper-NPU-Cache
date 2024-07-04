@@ -30,37 +30,28 @@
 #define __NPU_3DRAM__H__
 
 #include <cassert>
-#include "mem/port.hh"
+#include "base/types.hh"
+#include "params/CgraDram.hh"
+#include "sim/clocked_object.hh"
 
 namespace gem5
 {
-  using Latency = std::uint32_t;
-
-  template <typename DRAM_CAP = 0x4000000, typename BANK_CAP = 0x1000000>
-  class Dram 
+  class CgraDram: public ClockedObject
   {
-      public:
-        Dram() {
-          mDramPtr = std::make_unique<std::uint8_t>[mDramCap];
-        }
-        
-      private:
-        Latency DramLatency(std::uint64_t &addr, std::uint32_t &len, std::uint8_t &buf) {
-          assert(buf);
+  public:
+    CgraDram(const CgraDramParams &params);
 
-          std::uint32_t burst = len / this->mAlign;
-          if( burst +  mBurstBase > mMinLatency )
-            return (burst + mBurstBase);
-          else 
-            return mMinLatency;
-        }
+  private:
+    Cycles CgraDramLatency(std::uint64_t &addr, std::uint32_t &len, std::uint8_t &buf);
 
-      private:
-        const std::uint32_t mMinLatency = 23;
-        const std::uint32_t mBurstBase = 16;
-        const std::uint32_t mAlign = 256; 
-        std::uint32_t mDramCap =  DRAM_CAP;
-        std::shared_ptr<std::uint8_t> mDramPtr
+  private:
+    Cycles mMinCycles;
+    std::uint32_t mBurstBase;
+    std::uint32_t mBurstThreshold;
+    std::uint32_t mAlign;
+    std::uint32_t mCachLine;
+    const std::uint32_t mCgraDramCap = 0x4000000;
+    std::shared_ptr<std::uint8_t> mCgraDramPtr
   };
 
 } // namespace gem5

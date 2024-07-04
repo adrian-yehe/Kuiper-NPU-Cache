@@ -41,5 +41,3 @@ class KuiperCgra(SimObject):
     store_port = RequestPort(" Store port,store data to L0 cache or 3dram") 
 
     latency = Param.Latency("Time before firing the event")
-
-    

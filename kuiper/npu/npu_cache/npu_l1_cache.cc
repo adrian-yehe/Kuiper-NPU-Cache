@@ -38,7 +38,7 @@ namespace gem5
     CgraL1Cache::CgraL1Cache(const CgraL1CacheParams &params) : Cache(params),
                                                                 stats(this)
     {
-
+        DPRINTF(CgraL1Cache, "Cgra L1 cache line:%#x\r\n", params.system->cacheLineSize());
     }
 
     // void CgraL1Cache::recvTimingReq(PacketPtr pkt)
@@ -46,6 +46,15 @@ namespace gem5
     //     DPRINTF(CgraL1Cache, "Recive timing request from L0 cache\r\n");
         
     //     // assert(pkt->needsResponse());
+    //    if(true == pkt->isWrite())
+    //    {
+    
+    //    }
+    //    else if(true == pkt->isRead())
+    //    {
+
+    //    }
+
 
     //     Cache::memSidePort.sendTimingReq(pkt); 
     // }
